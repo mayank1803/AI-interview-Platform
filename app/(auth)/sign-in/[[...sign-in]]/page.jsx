@@ -46,6 +46,7 @@ export default function Page() {
                 a: 'text-[#9CA3AF] hover:text-[#6B7280]' // Styles for the "Don’t have an account?" link
               },
             }}
+            fallbackRedirectUrl="/dashboard" 
           />
         </div>
       </div>
