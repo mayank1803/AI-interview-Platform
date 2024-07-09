@@ -11,6 +11,10 @@ function QuestionsSection({mockInterviewQuestion,activeQuestionIndex}) {
             alert("sorry your browser does not support speech to text");
         }
     }
+    console.log('mockInterviewQuestion:', mockInterviewQuestion);
+    if (mockInterviewQuestion && mockInterviewQuestion.length > 0) {
+        console.log('First question structure:', mockInterviewQuestion[0]);
+    }
   return mockInterviewQuestion&&(
     <div className='p-5 border rounded-lg my-10'>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
@@ -19,8 +23,8 @@ function QuestionsSection({mockInterviewQuestion,activeQuestionIndex}) {
             ${activeQuestionIndex==index&& 'border-2 border-blue-800 shadow-lg text-blue-800'}`}>Question #{index+1}</h2>
             ))}
         </div>
-        <h2 className='my-5 text-md md:text-lg'>{mockInterviewQuestion[activeQuestionIndex]?.question}</h2>
-        <Volume2  className='cursor-pointer' onClick={()=>textToSpeach(mockInterviewQuestion[activeQuestionIndex]?.question)} />
+        <h2 className='my-5 text-md md:text-lg'>{mockInterviewQuestion[activeQuestionIndex]?.Question}</h2>
+        <Volume2  className='cursor-pointer' onClick={()=>textToSpeach(mockInterviewQuestion[activeQuestionIndex]?.Question)} />
         <div className='border rounded-lg p-5 bg-blue-100 my-10'>
             <h2 className='flex gap-2 items-center text-primary'>
                 <Lightbulb></Lightbulb>
@@ -30,6 +34,7 @@ function QuestionsSection({mockInterviewQuestion,activeQuestionIndex}) {
         </div>
          
     </div>
+    
   )
 }
 

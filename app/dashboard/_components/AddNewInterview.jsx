@@ -28,38 +28,57 @@ function AddNewInterview() {
   const router=useRouter();
   const {user}=useUser();
 
-  const onSubmit = async(e) => {
+  const onSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
     console.log(jobDesc, jobExperience, jobPosition);
 
-    const InputPrompt="Job Position:"+jobPosition+",Job Description:"+jobDesc+",Years of Experience:"+jobExperience+",Depends on this information please give me "+process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT+" Interview question with Answered inJson Format,Give Question and Answered as filed in JSON"
-    const result=await chatSession.sendMessage(InputPrompt);
-    const MockJsonResp=(result.response.text()).replace('```json','').replace('```','');
-    console.log(JSON.parse(MockJsonResp));
-    setJsonResponse(MockJsonResp);
-    if(MockJsonResp){
-    const resp=await db.insert(MockInterview)
-    .values({
-      mockId:uuidv4(),
-      jsonMockResp:MockJsonResp,
-      jobPosition:jobPosition,
-      jobDesc:jobDesc,
-      jobExperience:jobExperience,
-      createdBy:user?.primaryEmailAddress?.emailAddress,
-      createdAt:moment().format('DD--MM-yyyy')
-    }).returning({mockId:MockInterview.mockId});
-    console.log("Inserted ID:",resp)
-    if(resp){
-      setOpenDialog(false);
-      router.push('/dasboard/interview/'+resp[0]?.mockId)
+    const InputPrompt = `Job Position:${jobPosition}, Job Description:${jobDesc}, Years of Experience:${jobExperience}. Based on this information, please give me ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions with answers in JSON format. Include Question and Answer as fields in the JSON.`;
+    
+    try {
+      const result = await chatSession.sendMessage(InputPrompt);
+      const rawResponse = (await result.response.text()).replace('```json', '').replace('```', '');
+      console.log("Raw Response:", rawResponse);
+
+      let parsedJsonResp;
+      try {
+        parsedJsonResp = JSON.parse(rawResponse);
+        console.log("Parsed JSON Response:", parsedJsonResp);
+      } catch (parseError) {
+        console.error("Error parsing JSON response:", parseError);
+        throw new Error("Invalid JSON format in response");
+      }
+
+      setJsonResponse(parsedJsonResp);
+      
+      const resp = await db.insert(MockInterview)
+        .values({
+          mockId: uuidv4(),
+          jsonMockResp: JSON.stringify(parsedJsonResp),
+          jobPosition: jobPosition,
+          jobDesc: jobDesc,
+          jobExperience: jobExperience,
+          createdBy: user?.primaryEmailAddress?.emailAddress,
+          createdAt: moment().format('DD-MM-yyyy')
+        })
+        .returning({ mockId: MockInterview.mockId });
+      
+      console.log("Inserted ID:", resp);
+
+      if (resp) {
+        setOpenDialog(false);
+        router.push('/dashboard/interview/' + resp[0]?.mockId);
+      } else {
+        console.error("Error inserting data into the database.");
+      }
+    } catch (error) {
+      console.error("Error during the interview creation process:", error);
     }
-  }
-  else {
-    console.log("error");
-  }
+
     setLoading(false);
   }
+  
+  
 
   return (
     <div className="flex justify-center items-center p-4s">
