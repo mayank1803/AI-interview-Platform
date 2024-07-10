@@ -90,7 +90,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   const UpdateUserAnswer = async () => {
     setLoading(true);
     const feedbackPrompt = "Question:" + mockInterviewQuestion[activeQuestionIndex]?.Question + ",User Answer:" + userAnswer + ",Depends on question and user answer for given interview question please" +
-      " give us rating for answer out of 10 and feedback as area of improvement if any " +
+      " give us rating for answer and feedback as area of improvement if any " +
       " in just 3 to 5 lines to improve it in JSON format with rating field and feedback field";
     const result = await chatSession.sendMessage(feedbackPrompt);
     const mockJsonRes = (result.response.text()).replace('```json', '').replace('```', '');
