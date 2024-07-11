@@ -1,27 +1,29 @@
-import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
-import React from 'react'
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 
-function InterviewItemCard({interview}) {
-    const router=useRouter();
-    const onStart=()=>{
-        router.push('/dashboard/interview/'+interview?.mockId);
+function InterviewItemCard({ interview }) {
+    const router = useRouter();
+    const onStart = () => {
+        router.push('/dashboard/interview/' + interview?.mockId);
     }
-    const onFeedbackPress=()=>{
-        router.push('/dashboard/interview/'+interview?.mockId+"/feedback");
+    const onFeedbackPress = () => {
+        router.push('/dashboard/interview/' + interview?.mockId + "/feedback");
     }
-  return (
-    <div className='border shadow-sm rounded-lg p-3'>
-        <h2 className='font-bold text-primary'>JobPosition:{interview?.jobPosition}</h2>
-        <h2 className='text-sm text-gray-600'>Year Of Experience:{interview?.jobExperience}</h2>
-        <h2 className='text-xs text-gray-400'>Created At:{interview.createdAt}</h2>
-        <div className='flex justify-between mt-2 gap-5'>
-            <Button size="sm" variant="outline" className='w-full' onClick={onFeedbackPress}>Feedback</Button>
-            <Button size="sm" className="w-full" onClick={onStart}>Start</Button>
-        </div>
-        
-    </div>
-  )
+
+    return (
+<div className='bg-gray-100 border border-gray-300 shadow-lg rounded-lg p-5 hover:shadow-md transition-shadow duration-300'>
+  <h2 className='font-bold text-xl text-gray-800 mb-2'>Job Position: {interview?.jobPosition}</h2>
+  <p className='text-s text-indigo-500 mb-1'>Years of Experience: {interview?.jobExperience}</p>
+  <p className='text-xs text-green-500 mb-3'>Created At: {new Date(interview.createdAt).toLocaleDateString()}</p>
+  <div className='flex justify-between gap-3'>
+    <button className='bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm w-full transition-colors duration-300' onClick={onFeedbackPress}>Feedback</button>
+    <button className='bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm w-full transition-colors duration-300' onClick={onStart}>Start</button>
+  </div>
+</div>
+
+
+    );
 }
 
-export default InterviewItemCard
+export default InterviewItemCard;

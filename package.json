@@ -22,6 +22,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "drizzle-orm": "^0.31.2",
+    "framer-motion": "^11.3.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.400.0",
     "moment": "^2.30.1",

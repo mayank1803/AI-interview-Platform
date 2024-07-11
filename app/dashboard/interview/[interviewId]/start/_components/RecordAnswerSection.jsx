@@ -127,8 +127,8 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
 
   return (
     <div className='flex items-center justify-center flex-col'>
-      <div className='flex flex-col mt-20 justify-center bg-black items-center rounded-lg pd-5'>
-        <Image src={'/webcam.png'} width={200} height={200} className='absolute bg-black' />
+      <div className='bg-gray-100 border border-gray-300 flex flex-col mt-20 justify-center  items-center rounded-lg pd-5'>
+        <Image src={'/webcam.png'} width={200} height={200} className='absolute bg-gray-100' />
         <Webcam
           mirrored={true}
           style={{
