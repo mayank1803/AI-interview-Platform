@@ -1,9 +1,8 @@
 "use client"
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback,useRef } from 'react'
 import Webcam from 'react-webcam'
-import useSpeechToText from 'react-hook-speech-to-text';
 import { Mic, StopCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { chatSession } from '../../../../../../utils/GeminiAIModal'
@@ -17,27 +16,55 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const {
-    error,
-    interimResult,
-    isRecording,
-    results,
-    startSpeechToText,
-    stopSpeechToText,
-    setResults
-  } = useSpeechToText({
-    continuous: true,
-    useLegacyResults: false,
-    crossBrowser: true,
-    interimResults: true  // Capture partial results
-  });
+  const [isRecording, setIsRecording] = useState(false);
+  const [interimResult, setInterimResult] = useState('');
+  const [finalResult, setFinalResult] = useState('');
+
+  const recognition = useRef(null);
+
+  const initWebSpeechAPI = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn("Web Speech API is not supported in this browser.");
+      return;
+    }
+
+    recognition.current = new SpeechRecognition();
+    recognition.current.continuous = true;
+    recognition.current.interimResults = true;
+    recognition.current.lang = 'en-US';
+
+    recognition.current.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      setInterimResult(interimTranscript);
+      setFinalResult(finalTranscript);
+    };
+
+    recognition.current.onerror = (event) => {
+      console.error('Speech Recognition Error:', event.error);
+      setErrorMessage('Speech recognition error occurred. Please try again.');
+      toast.error('Speech recognition error occurred. Please try again.');
+    };
+  };
+
+  useEffect(() => {
+    initWebSpeechAPI();
+  }, []);
 
   const processResults = useCallback(() => {
-    if (results.length > 0) {
-      setUserAnswer(prevAns => prevAns + results[results.length - 1]?.transcript);
-      setResults([]);
+    if (finalResult) {
+      setUserAnswer(prevAns => prevAns + finalResult);
+      setFinalResult('');
     }
-  }, [results, setResults]);
+  }, [finalResult]);
 
   useEffect(() => {
     if (!isRecording && userAnswer.length > 10) {
@@ -48,42 +75,15 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   useEffect(() => {
     const debounceTimeout = setTimeout(processResults, 500);
     return () => clearTimeout(debounceTimeout);
-  }, [results, processResults]);
-
-  useEffect(() => {
-    if (error) {
-      console.error('Speech Recognition Error:', error);
-      setErrorMessage('Speech recognition error occurred. Please try again.');
-      toast.error('Speech recognition error occurred. Please try again.');
-    }
-  }, [error]);
+  }, [finalResult, processResults]);
 
   const StartStopRecording = async () => {
     if (isRecording) {
-      stopSpeechToText();
+      recognition.current?.stop();
+      setIsRecording(false);
     } else {
-      if (navigator.permissions) {
-        navigator.permissions.query({ name: 'microphone' }).then((result) => {
-          if (result.state === 'granted') {
-            startSpeechToText();
-          } else if (result.state === 'prompt') {
-            navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-              startSpeechToText();
-              stream.getTracks().forEach(track => track.stop());
-            }).catch((err) => {
-              console.error("Permission prompt failed:", err);
-              toast.error("Microphone permission is required for recording.");
-            });
-          } else {
-            toast.error("Microphone access denied.");
-          }
-        }).catch((err) => {
-          console.error("Permission query failed:", err);
-          toast.error("Failed to get microphone permissions.");
-        });
-      } else {
-        startSpeechToText();
-      }
+      recognition.current?.start();
+      setIsRecording(true);
     }
   };
 
@@ -110,7 +110,8 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     if (resp) {
       toast('User Answer recorded Successfully');
       setUserAnswer('');
-      setResults([]);
+      setInterimResult('');
+      setFinalResult('');
     }
     setLoading(false);
   };
@@ -148,6 +149,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
           </h2>
         }
       </Button>
+      {interimResult && <p className='text-gray-600'>{interimResult}</p>}
       {errorMessage && <p className='text-red-600'>{errorMessage}</p>}
     </div>
   );

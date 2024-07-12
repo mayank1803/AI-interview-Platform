@@ -21,18 +21,15 @@ function Header() {
                 <Image src="/logo.svg" width={160} height={100} alt="logo" />
 
                 {/* Navigation Links */}
-                <ul className="hidden md:flex gap-8 text-gray-800 font-medium">
-                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/dashboard' && 'text-primary font-semibold'}`}>
+                <ul className="hidden md:flex gap-8 text-blue-500 font-medium">
+                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/dashboard' && 'text-blue-800 font-semibold'}`}>
                         <a href="/dashboard">Dashboard</a>
                     </li>
-                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/dashboard/questions' && 'text-primary font-semibold'}`}>
-                        <a href="/dashboard/questions">Questions</a>
+                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/questions' && 'text-blue-800 font-semibold'}`}>
+                        <a href="/questions">Questions</a>
                     </li>
-                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/dashboard/upgrade' && 'text-primary font-semibold'}`}>
-                        <a href="/dashboard/upgrade">Upgrade</a>
-                    </li>
-                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/dashboard/how' && 'text-primary font-semibold'}`}>
-                        <a href="/dashboard/how">How it Works?</a>
+                    <li className={`hover:text-primary hover:font-semibold transition-all ${path === '/how' && 'text-blue-800 font-semibold'}`}>
+                        <a href="/how">How it Works?</a>
                     </li>
                 </ul>
 

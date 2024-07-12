@@ -11,7 +11,7 @@ import {
 import { ChevronsUpDownIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { format,parse } from 'date-fns'
 
 function Feedback({ params }) {
     const [feedbackList, setFeedbackList] = useState([]);
@@ -82,7 +82,7 @@ function Feedback({ params }) {
                             {answers.map((item, idx) => (
                                 <div key={idx} className='p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-white shadow-md hover:shadow-lg transition-shadow duration-300'>
                                     <h2 className='p-2 border-b border-gray-200 text-sm text-blue-700'>
-                                        <strong>Answer Provided on:</strong> {`${format(new Date(item.createdAt), 'MMM dd, yyyy')} at ${format(new Date(item.createdAt), 'hh:mm a')}`}
+                                        <strong>Answer Provided on:</strong> {`${format(parse(item.createdAt, 'dd-MM-yyyy hh:mm a', new Date()), 'dd-MM-yyyy')} at ${format(parse(item.createdAt, 'dd-MM-yyyy hh:mm a', new Date()), 'hh:mm a')}`}
                                     </h2>
                                     <h2 className='text-red-600 p-2 border-b border-gray-200 mt-2'><strong>Rating:</strong> {item.rating}</h2>
                                     <h2 className='p-2 border rounded-lg bg-red-50 text-sm text-red-900 mt-2'><strong>Your Answer: </strong>{item.userAns}</h2>
