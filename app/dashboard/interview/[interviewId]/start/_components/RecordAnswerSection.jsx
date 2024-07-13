@@ -1,15 +1,14 @@
-"use client"
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
-import React, { useEffect, useState, useCallback,useRef } from 'react'
-import Webcam from 'react-webcam'
-import { Mic, StopCircle } from 'lucide-react'
-import { toast } from 'sonner'
-import { chatSession } from '../../../../../../utils/GeminiAIModal'
-import { db } from '../../../../../../utils/db'
-import { useUser } from '@clerk/nextjs'
-import moment from 'moment'
-import { UserAnswer } from 'utils/schema'
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import Webcam from 'react-webcam';
+import { Mic, StopCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { chatSession } from '../../../../../../utils/GeminiAIModal';
+import { db } from '../../../../../../utils/db';
+import { useUser } from '@clerk/nextjs';
+import moment from 'moment';
+import { UserAnswer } from 'utils/schema';
 
 function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData }) {
   const [userAnswer, setUserAnswer] = useState('');
@@ -26,6 +25,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       console.warn("Web Speech API is not supported in this browser.");
+      setErrorMessage("Web Speech API is not supported in this browser.");
       return;
     }
 
@@ -39,13 +39,13 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          finalTranscript += event.results[i][0].transcript + ' ';
         } else {
           interimTranscript += event.results[i][0].transcript;
         }
       }
       setInterimResult(interimTranscript);
-      setFinalResult(finalTranscript);
+      setFinalResult(prevFinal => prevFinal + finalTranscript);
     };
 
     recognition.current.onerror = (event) => {
@@ -60,7 +60,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   }, []);
 
   const processResults = useCallback(() => {
-    if (finalResult) {
+    if (finalResult.trim()) {
       setUserAnswer(prevAns => prevAns + finalResult);
       setFinalResult('');
     }
