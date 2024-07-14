@@ -98,7 +98,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
 
     try {
       const result = await chatSession.sendMessage(feedbackPrompt);
-      const responseText = result.response.text();
+      const responseText = await result.response.text();
 
       // Extract JSON from response text
       let jsonFeedbackResp;
@@ -171,12 +171,9 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
         variant="outline" 
         className='my-4'
         onClick={() => {
-          // If switching to text mode, clear the interim and final results
-          if (inputMode === 'speech') {
+          if (inputMode === 'speech' && isRecording) {
             recognition.current?.stop();
             setIsRecording(false);
-            setInterimResult('');
-            setFinalResult('');
           }
           setInputMode(inputMode === 'speech' ? 'text' : 'speech');
         }}
