@@ -8,7 +8,8 @@ import RecordAnswerSection from './_components/RecordAnswerSection';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
+import { format,parse } from 'date-fns'
+import moment from "moment";
 function StartInterview({ params }) {
   const [interviewData, setInterviewData] = useState();
   const [mockInterviewQuestion, setMockInterviewQuestion] = useState();
@@ -43,6 +44,8 @@ function StartInterview({ params }) {
     setActiveQuestionIndex((prevIndex) => prevIndex - 1);
     scrollToQuestions();
   };
+  const createdAt = interviewData?.createdAt;
+  const parsedDate = createdAt ? moment(createdAt, 'DD-MM-YYYY').format('DD-MM-YYYY') : 'Invalid Date';
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -62,7 +65,7 @@ function StartInterview({ params }) {
       <span className="font-semibold text-blue-600">Description:</span> {interviewData?.jobDesc}
     </p>
     <p className="text-lg">
-      <span className="font-semibold text-blue-600">Date:</span> {new Date(interviewData?.createdAt).toLocaleDateString()}
+      <span className="font-semibold text-blue-600">Date:</span> {parsedDate}
     </p>
   </motion.div>
 </div>

@@ -10,75 +10,140 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { chatSession } from "../../../utils/GeminiAIModal"
-import {db} from "utils/db"
+import { chatSession } from "../../../utils/GeminiAIModal";
+import { db } from "utils/db";
 import { LoaderCircle } from "lucide-react";
 import { MockInterview } from "utils/schema";
-import {v4 as uuidv4} from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import Ajv from "ajv";
+
 function AddNewInterview() {
   const [openDialog, setOpenDialog] = useState(false);
   const [jobPosition, setJobPosition] = useState("");
   const [jobDesc, setJobDesc] = useState("");
   const [jobExperience, setJobExperience] = useState("");
-  const [loading,setLoading]=useState(false);
-  const [jsonResponse,setJsonResponse]=useState([]);
-  const router=useRouter();
-  const {user}=useUser();
+  const [loading, setLoading] = useState(false);
+  const [jsonResponse, setJsonResponse] = useState([]);
+  const router = useRouter();
+  const { user } = useUser();
 
   const onSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-    console.log(jobDesc, jobExperience, jobPosition);
 
-    const InputPrompt = `Job Position:${jobPosition}, Job Description:${jobDesc}, Years of Experience:${jobExperience}. Based on this information, please give me ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions with answers in JSON format. Include Question and Answer as fields in the JSON.`;
-    
+    const InputPrompt = `Job Position: ${jobPosition}, Job Description: ${jobDesc}, Years of Experience: ${jobExperience}. 
+    Please provide ${process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT} interview questions in JSON format. The questions should include:
+    - A mix of simple and practical questions.
+    - Simple questions should cover basic concepts and theory.
+    - Practical questions should include:
+      - A coding data structure problem or a story based based dsa problem or a design question.
+      - A solution with example code and explanation(should be in c++ or java).
+      - Difficulty level (Beginner, Intermediate, Advanced).
+      - Relevant programming language or technology.
+    Format:
+    [
+      {
+        "Question": "Question text",
+        "Answer": "Answer text",
+        "Type": "Simple" | "Practical",
+        "Difficulty": "Beginner" | "Intermediate" | "Advanced",
+        "Language": "Programming language" (should be acceptable in both c++ and java and optional for Simple Question),
+        "Technology": "Technology"(optional for Simple Question)
+      }
+    ]`;
+
     try {
       const result = await chatSession.sendMessage(InputPrompt);
-      const rawResponse = (await result.response.text()).replace('```json', '').replace('```', '');
+      let rawResponse = (await result.response.text()).trim();
+      
+      // Log rawResponse for debugging
       console.log("Raw Response:", rawResponse);
 
-      let parsedJsonResp;
+      // Extract JSON part by finding the first and last occurrences of curly braces
+      let jsonString = rawResponse;
       try {
-        parsedJsonResp = JSON.parse(rawResponse);
-        console.log("Parsed JSON Response:", parsedJsonResp);
-      } catch (parseError) {
-        console.error("Error parsing JSON response:", parseError);
+        const startIndex = rawResponse.indexOf('[');
+        const endIndex = rawResponse.lastIndexOf(']') + 1;
+
+        if (startIndex === -1 || endIndex === -1) {
+          throw new Error('Invalid JSON format: No valid JSON object found.');
+        }
+
+        jsonString = rawResponse.substring(startIndex, endIndex).trim();
+        console.log("Extracted JSON String:", jsonString);
+
+        // Validate and parse JSON response
+        let parsedJsonResp;
+        try {
+          parsedJsonResp = JSON.parse(jsonString);
+          console.log("Parsed JSON Response:", parsedJsonResp);
+        } catch (parseError) {
+          console.error("Error parsing JSON response:", parseError);
+          throw new Error("Invalid JSON format in response");
+        }
+
+        // Optional: Validate the structure of the parsed JSON
+        // Define a JSON schema for validation
+        const schema = {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              Question: { type: 'string' },
+              Answer: { type: 'string' },
+              Type: { type: 'string', enum: ['Simple', 'Practical'] },
+              Difficulty: { type: 'string', enum: ['Beginner', 'Intermediate', 'Advanced'] },
+              Language: { type: 'string' },
+              Technology: { type: 'string' }
+            },
+            required: ['Question', 'Answer', 'Type']
+          }
+        };
+
+        // Validate JSON schema
+        const ajv = new Ajv();
+        const validate = ajv.compile(schema);
+        const isValid = validate(parsedJsonResp);
+        if (!isValid) {
+          console.error('Invalid JSON schema:', validate.errors);
+          throw new Error('JSON response does not match the expected schema');
+        }
+
+        setJsonResponse(parsedJsonResp);
+
+        const resp = await db.insert(MockInterview)
+          .values({
+            mockId: uuidv4(),
+            jsonMockResp: JSON.stringify(parsedJsonResp),
+            jobPosition: jobPosition,
+            jobDesc: jobDesc,
+            jobExperience: jobExperience,
+            createdBy: user?.primaryEmailAddress?.emailAddress,
+            createdAt: moment().format('DD-MM-YYYY')
+          })
+          .returning({ mockId: MockInterview.mockId });
+
+        console.log("Inserted ID:", resp);
+
+        if (resp) {
+          setOpenDialog(false);
+          router.push('/dashboard/interview/' + resp[0]?.mockId);
+        } else {
+          console.error("Error inserting data into the database.");
+        }
+      } catch (error) {
+        console.error("Error during the interview creation process:", error);
         throw new Error("Invalid JSON format in response");
-      }
-
-      setJsonResponse(parsedJsonResp);
-      
-      const resp = await db.insert(MockInterview)
-        .values({
-          mockId: uuidv4(),
-          jsonMockResp: JSON.stringify(parsedJsonResp),
-          jobPosition: jobPosition,
-          jobDesc: jobDesc,
-          jobExperience: jobExperience,
-          createdBy: user?.primaryEmailAddress?.emailAddress,
-          createdAt: moment().format('DD-MM-yyyy')
-        })
-        .returning({ mockId: MockInterview.mockId });
-      
-      console.log("Inserted ID:", resp);
-
-      if (resp) {
-        setOpenDialog(false);
-        router.push('/dashboard/interview/' + resp[0]?.mockId);
-      } else {
-        console.error("Error inserting data into the database.");
       }
     } catch (error) {
       console.error("Error during the interview creation process:", error);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
-  
-  
 
   return (
     <div className="flex justify-center items-center p-4s">
@@ -109,7 +174,7 @@ function AddNewInterview() {
                 </h2>
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="block  text-white font-semibold mb-2">
+                    <label className="block text-white font-semibold mb-2">
                       Job Role/Job Position
                     </label>
                     <Input
@@ -155,10 +220,9 @@ function AddNewInterview() {
                     type="submit"
                     className="bg-blue-600 text-white hover:bg-blue-700 transition" disabled={loading}
                   >
-                    {loading?<>
-                    <LoaderCircle className="animate-spin" />'Generating Response From AI'
-                    </>:'Start Interview'}
-                    
+                    {loading ? <>
+                      <LoaderCircle className="animate-spin" /> Generating Response From AI
+                    </> : 'Start Interview'}
                   </Button>
                 </div>
               </form>

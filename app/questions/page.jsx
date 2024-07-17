@@ -29,7 +29,7 @@ const QuestionsPage = () => {
   ];
 
   return (
-    <div className="px-4 py-12 mx-auto max-w-4xl bg-gray-50">
+    <div className="px-4 py-12 mx-auto max-w-4xl">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
