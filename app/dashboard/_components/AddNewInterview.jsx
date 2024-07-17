@@ -30,6 +30,11 @@ function AddNewInterview() {
   const router = useRouter();
   const { user } = useUser();
 
+  const cleanJSON = (input) => {
+    // Replace control characters and other unwanted characters
+    return input.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+  };
+
   const onSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
@@ -62,17 +67,21 @@ function AddNewInterview() {
       // Log rawResponse for debugging
       console.log("Raw Response:", rawResponse);
 
-      // Extract JSON part by finding the first and last occurrences of curly braces
-      let jsonString = rawResponse;
+      // Clean the raw response
+      let cleanedResponse = cleanJSON(rawResponse);
+      console.log("Cleaned Response:", cleanedResponse);
+
+      // Extract JSON part by finding the first and last occurrences of square brackets
+      let jsonString;
       try {
-        const startIndex = rawResponse.indexOf('[');
-        const endIndex = rawResponse.lastIndexOf(']') + 1;
+        const startIndex = cleanedResponse.indexOf('[');
+        const endIndex = cleanedResponse.lastIndexOf(']') + 1;
 
         if (startIndex === -1 || endIndex === -1) {
-          throw new Error('Invalid JSON format: No valid JSON object found.');
+          throw new Error('Invalid JSON format: No valid JSON array found.');
         }
 
-        jsonString = rawResponse.substring(startIndex, endIndex).trim();
+        jsonString = cleanedResponse.substring(startIndex, endIndex).trim();
         console.log("Extracted JSON String:", jsonString);
 
         // Validate and parse JSON response
@@ -86,7 +95,6 @@ function AddNewInterview() {
         }
 
         // Optional: Validate the structure of the parsed JSON
-        // Define a JSON schema for validation
         const schema = {
           type: 'array',
           items: {
@@ -103,7 +111,6 @@ function AddNewInterview() {
           }
         };
 
-        // Validate JSON schema
         const ajv = new Ajv();
         const validate = ajv.compile(schema);
         const isValid = validate(parsedJsonResp);

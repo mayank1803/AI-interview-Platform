@@ -40,6 +40,7 @@
     "react-speech-recognition": "^3.10.0",
     "react-webcam": "^7.2.0",
     "regenerator-runtime": "^0.14.1",
+    "safe-json-parse": "^4.0.0",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
