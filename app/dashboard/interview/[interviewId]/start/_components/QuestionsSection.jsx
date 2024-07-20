@@ -52,7 +52,7 @@ function QuestionsSection({ mockInterviewQuestion, activeQuestionIndex, setActiv
             <span className='text-gray-500 text-sm'>Read Aloud</span>
           </div>
           {mockInterviewQuestion[activeQuestionIndex]?.Type && (
-            <div className='flex gap-4 mb-4'>
+            <div className='flex flex-wrap gap-4 mb-4'>
               <span className='px-3 py-1 text-sm font-medium text-white bg-blue-500 rounded-full'>
                 {mockInterviewQuestion[activeQuestionIndex]?.Type}
               </span>
